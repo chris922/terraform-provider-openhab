@@ -73,6 +73,7 @@ func (p *OpenhabProvider) GetResources(ctx context.Context) (map[string]tfsdk.Re
 	return map[string]tfsdk.ResourceType{
 		//"scaffolding_example": ExampleResourceType{},
 		"openhab_item": ItemResourceType{},
+		"openhab_link": LinkResourceType{},
 	}, nil
 }
 

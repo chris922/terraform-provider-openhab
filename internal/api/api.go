@@ -550,10 +550,10 @@ type EnrichedChannelDTO_Properties struct {
 
 // EnrichedItemChannelLinkDTO defines model for EnrichedItemChannelLinkDTO.
 type EnrichedItemChannelLinkDTO struct {
-	ChannelUID    *string                                   `json:"channelUID,omitempty"`
-	Configuration *EnrichedItemChannelLinkDTO_Configuration `json:"configuration,omitempty"`
-	Editable      *bool                                     `json:"editable,omitempty"`
-	ItemName      *string                                   `json:"itemName,omitempty"`
+	ChannelUID    *string            `json:"channelUID,omitempty"`
+	Configuration *map[string]string `json:"configuration,omitempty"`
+	Editable      *bool              `json:"editable,omitempty"`
+	ItemName      *string            `json:"itemName,omitempty"`
 }
 
 // EnrichedItemChannelLinkDTO_Configuration defines model for EnrichedItemChannelLinkDTO.Configuration.
@@ -736,14 +736,9 @@ type IconSetFormats string
 
 // ItemChannelLinkDTO defines model for ItemChannelLinkDTO.
 type ItemChannelLinkDTO struct {
-	ChannelUID    *string                           `json:"channelUID,omitempty"`
-	Configuration *ItemChannelLinkDTO_Configuration `json:"configuration,omitempty"`
-	ItemName      *string                           `json:"itemName,omitempty"`
-}
-
-// ItemChannelLinkDTO_Configuration defines model for ItemChannelLinkDTO.Configuration.
-type ItemChannelLinkDTO_Configuration struct {
-	AdditionalProperties map[string]map[string]interface{} `json:"-"`
+	ChannelUID    *string            `json:"channelUID,omitempty"`
+	Configuration *map[string]string `json:"configuration,omitempty"`
+	ItemName      *string            `json:"itemName,omitempty"`
 }
 
 // ItemHistoryDTO defines model for ItemHistoryDTO.
@@ -2985,59 +2980,6 @@ func (a *EnrichedThingDTO_Properties) UnmarshalJSON(b []byte) error {
 
 // Override default JSON handling for EnrichedThingDTO_Properties to handle AdditionalProperties
 func (a EnrichedThingDTO_Properties) MarshalJSON() ([]byte, error) {
-	var err error
-	object := make(map[string]json.RawMessage)
-
-	for fieldName, field := range a.AdditionalProperties {
-		object[fieldName], err = json.Marshal(field)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
-		}
-	}
-	return json.Marshal(object)
-}
-
-// Getter for additional properties for ItemChannelLinkDTO_Configuration. Returns the specified
-// element and whether it was found
-func (a ItemChannelLinkDTO_Configuration) Get(fieldName string) (value map[string]interface{}, found bool) {
-	if a.AdditionalProperties != nil {
-		value, found = a.AdditionalProperties[fieldName]
-	}
-	return
-}
-
-// Setter for additional properties for ItemChannelLinkDTO_Configuration
-func (a *ItemChannelLinkDTO_Configuration) Set(fieldName string, value map[string]interface{}) {
-	if a.AdditionalProperties == nil {
-		a.AdditionalProperties = make(map[string]map[string]interface{})
-	}
-	a.AdditionalProperties[fieldName] = value
-}
-
-// Override default JSON handling for ItemChannelLinkDTO_Configuration to handle AdditionalProperties
-func (a *ItemChannelLinkDTO_Configuration) UnmarshalJSON(b []byte) error {
-	object := make(map[string]json.RawMessage)
-	err := json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if len(object) != 0 {
-		a.AdditionalProperties = make(map[string]map[string]interface{})
-		for fieldName, fieldBuf := range object {
-			var fieldVal map[string]interface{}
-			err := json.Unmarshal(fieldBuf, &fieldVal)
-			if err != nil {
-				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
-			}
-			a.AdditionalProperties[fieldName] = fieldVal
-		}
-	}
-	return nil
-}
-
-// Override default JSON handling for ItemChannelLinkDTO_Configuration to handle AdditionalProperties
-func (a ItemChannelLinkDTO_Configuration) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 

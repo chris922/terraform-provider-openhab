@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/chris922/terraform-provider-openhab/internal/api"
+	"github.com/chris922/terraform-provider-openhab/internal/provider/util"
 	"github.com/chris922/terraform-provider-openhab/internal/provider/validator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -14,7 +15,7 @@ import (
 
 type ItemResourceType struct{}
 
-func (t ItemResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (t ItemResourceType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "OpenHAB Item",
@@ -84,7 +85,7 @@ func (t ItemResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 	}, nil
 }
 
-func (t ItemResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (t ItemResourceType) NewResource(_ context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
 	provider, diags := ConvertProviderType(in)
 
 	return itemResource{
@@ -121,13 +122,13 @@ func (r itemResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 	}
 
 	body := api.AddOrUpdateItemInRegistryJSONRequestBody{
-		Name:  TypeToString(data.Name),
-		Label: TypeToString(data.Label),
-		Type:  TypeToString(data.Type),
+		Name:  util.TypeToString(data.Name),
+		Label: util.TypeToString(data.Label),
+		Type:  util.TypeToString(data.Type),
 
-		Category:   TypeToString(data.Category),
-		Tags:       TypeToStringArray(data.Tags),
-		GroupNames: TypeToStringArray(data.GroupNames),
+		Category:   util.TypeToString(data.Category),
+		Tags:       util.TypeToStringArray(data.Tags),
+		GroupNames: util.TypeToStringArray(data.GroupNames),
 	}
 	apiResp, err := r.client.AddOrUpdateItemInRegistry(ctx, data.Name.Value,
 		&api.AddOrUpdateItemInRegistryParams{}, body)
@@ -155,7 +156,7 @@ func (r itemResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 	}
 
 	// store enriched item to resource
-	r.enrichedItemToData(data, apiRespObj)
+	enrichedItemToData(data, apiRespObj)
 
 	tflog.Trace(ctx, "created an Item resource", "name", data.Name.Value)
 
@@ -176,8 +177,8 @@ func (r itemResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 	apiResp, err := r.client.GetItemByName(ctx, data.Name.Value,
 		&api.GetItemByNameParams{})
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error",
-			fmt.Sprintf("Unable to create client, got error: %s", err))
+		resp.Diagnostics.AddError("Read Item Error",
+			fmt.Sprintf("Unable to read item, got error: %s", err))
 		return
 	}
 
@@ -202,7 +203,7 @@ func (r itemResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 	}
 
 	// store enriched item to resource
-	r.enrichedItemToData(data, apiRespObj)
+	enrichedItemToData(data, apiRespObj)
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -223,9 +224,9 @@ func (r itemResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 		Label: &data.Label.Value,
 		Type:  &data.Type.Value,
 
-		Category:   TypeToString(data.Category),
-		Tags:       TypeToStringArray(data.Tags),
-		GroupNames: TypeToStringArray(data.GroupNames),
+		Category:   util.TypeToString(data.Category),
+		Tags:       util.TypeToStringArray(data.Tags),
+		GroupNames: util.TypeToStringArray(data.GroupNames),
 	}
 	apiResp, err := r.client.AddOrUpdateItemInRegistry(ctx, data.Name.Value,
 		&api.AddOrUpdateItemInRegistryParams{}, body)
@@ -253,7 +254,7 @@ func (r itemResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 	}
 
 	// store enriched item to resource
-	r.enrichedItemToData(data, apiRespObj)
+	enrichedItemToData(data, apiRespObj)
 
 	tflog.Trace(ctx, "updated an Item resource", "name", data.Name.Value)
 
@@ -290,16 +291,16 @@ func (r itemResource) Delete(ctx context.Context, req tfsdk.DeleteResourceReques
 }
 
 func (r itemResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, tftypes.NewAttributePath().WithAttributeName("id"), req, resp)
+	tfsdk.ResourceImportStatePassthroughID(ctx, tftypes.NewAttributePath().WithAttributeName("name"), req, resp)
 }
 
-func (r itemResource) enrichedItemToData(data itemResourceData, apiRespObj *api.EnrichedItemDTO) {
-	data.Id = types.String{Value: *apiRespObj.Name}
-	data.Name = types.String{Value: *apiRespObj.Name}
-	data.Label = types.String{Value: *apiRespObj.Label}
-	data.Type = types.String{Value: *apiRespObj.Type}
+func enrichedItemToData(data itemResourceData, apiRespObj *api.EnrichedItemDTO) {
+	data.Id = util.StringToType(apiRespObj.Name)
+	data.Name = util.StringToType(apiRespObj.Name)
+	data.Label = util.StringToType(apiRespObj.Label)
+	data.Type = util.StringToType(apiRespObj.Type)
 
-	data.Category = StringToType(apiRespObj.Category)
-	data.Tags = StringArrayToType(apiRespObj.Tags)
-	data.GroupNames = StringArrayToType(apiRespObj.GroupNames)
+	data.Category = util.StringToType(apiRespObj.Category)
+	data.Tags = util.StringArrayToType(apiRespObj.Tags)
+	data.GroupNames = util.StringArrayToType(apiRespObj.GroupNames)
 }
