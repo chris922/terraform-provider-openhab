@@ -3,39 +3,45 @@ package provider
 import (
 	"context"
 	"fmt"
-
+	"github.com/chris922/terraform-provider-openhab/internal/api"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"net/http"
 )
 
-// provider satisfies the tfsdk.Provider interface and usually is included
+// OpenhabProvider satisfies the tfsdk.Provider interface and usually is included
 // with all Resource and DataSource implementations.
-type provider struct {
-	// client can contain the upstream provider SDK or HTTP client used to
+type OpenhabProvider struct {
+	// client can contain the upstream OpenhabProvider SDK or HTTP client used to
 	// communicate with the upstream service. Resource and DataSource
 	// implementations can then make calls using this client.
 	//
-	// TODO: If appropriate, implement upstream provider SDK or HTTP client.
+	// TODO: If appropriate, implement upstream OpenhabProvider SDK or HTTP client.
 	// client vendorsdk.ExampleClient
 
-	// configured is set to true at the end of the Configure method.
+	// Configured is set to true at the end of the Configure method.
 	// This can be used in Resource and DataSource implementations to verify
-	// that the provider was previously configured.
-	configured bool
+	// that the OpenhabProvider was previously Configured.
+	Configured bool
 
-	// version is set to the provider version on release, "dev" when the
-	// provider is built and ran locally, and "test" when running acceptance
+	// Version is set to the OpenhabProvider Version on release, "dev" when the
+	// OpenhabProvider is built and ran locally, and "test" when running acceptance
 	// testing.
-	version string
+	Version string
+
+	data providerData
+
+	Client *api.Client
 }
 
 // providerData can be used to store data from the Terraform configuration.
 type providerData struct {
-	Example types.String `tfsdk:"example"`
+	Endpoint types.String `tfsdk:"endpoint"`
+	ApiToken types.String `tfsdk:"api_token"`
 }
 
-func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
+func (p *OpenhabProvider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
 	var data providerData
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -47,68 +53,86 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	// Configuration values are now available.
 	// if data.Example.Null { /* ... */ }
 
-	// If the upstream provider SDK or HTTP client requires configuration, such
+	// If the upstream OpenhabProvider SDK or HTTP client requires configuration, such
 	// as authentication or logging, this is a great opportunity to do so.
+	client, err := api.NewClient(data.Endpoint.Value, api.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+		req.SetBasicAuth(data.ApiToken.Value, "")
+		return nil
+	}))
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error",
+			fmt.Sprintf("Unable to create client, got error: %s", err))
+		return
+	}
 
-	p.configured = true
+	p.Client = client
+	p.Configured = true
 }
 
-func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
+func (p *OpenhabProvider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	return map[string]tfsdk.ResourceType{
-		"scaffolding_example": exampleResourceType{},
+		//"scaffolding_example": ExampleResourceType{},
+		"openhab_item": ItemResourceType{},
 	}, nil
 }
 
-func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
+func (p *OpenhabProvider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
 	return map[string]tfsdk.DataSourceType{
-		"scaffolding_example": exampleDataSourceType{},
+		//"scaffolding_example": ExampleDataSourceType{},
 	}, nil
 }
 
-func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (p *OpenhabProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
-			"example": {
-				MarkdownDescription: "Example provider attribute",
-				Optional:            true,
+			"endpoint": {
+				MarkdownDescription: "API endpoint of the target openHAB server, usually the URL with `/rest` suffix, e.g. `https://openhab:8080/rest`",
+				Required:            true,
 				Type:                types.StringType,
+				// TODO: validator
+			},
+			"api_token": {
+				MarkdownDescription: "API token used to authenticate against the openHAB server",
+				Required:            true,
+				Type:                types.StringType,
+				// TODO: validator
 			},
 		},
 	}, nil
 }
 
-func New(version string) func() tfsdk.Provider {
+func NewOpenhabProvider(version string) func() tfsdk.Provider {
 	return func() tfsdk.Provider {
-		return &provider{
-			version: version,
+		return &OpenhabProvider{
+			Version: version,
 		}
 	}
 }
 
-// convertProviderType is a helper function for NewResource and NewDataSource
-// implementations to associate the concrete provider type. Alternatively,
-// this helper can be skipped and the provider type can be directly type
-// asserted (e.g. provider: in.(*provider)), however using this can prevent
+// ConvertProviderType is a helper function for NewResource and NewDataSource
+// implementations to associate the concrete OpenhabProvider type. Alternatively,
+// this helper can be skipped and the OpenhabProvider type can be directly type
+// asserted (e.g. OpenhabProvider: in.(*OpenhabProvider)), however using this can prevent
 // potential panics.
-func convertProviderType(in tfsdk.Provider) (provider, diag.Diagnostics) {
+func ConvertProviderType(in tfsdk.Provider) (OpenhabProvider, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	p, ok := in.(*provider)
+	p, ok := in.(*OpenhabProvider)
 
 	if !ok {
 		diags.AddError(
 			"Unexpected Provider Instance Type",
-			fmt.Sprintf("While creating the data source or resource, an unexpected provider type (%T) was received. This is always a bug in the provider code and should be reported to the provider developers.", p),
+			fmt.Sprintf("While creating the data source or resource, an unexpected OpenhabProvider type (%T) was received. This is always a bug in the OpenhabProvider code and should be reported to the OpenhabProvider developers.", p),
 		)
-		return provider{}, diags
+		return OpenhabProvider{}, diags
 	}
 
 	if p == nil {
 		diags.AddError(
 			"Unexpected Provider Instance Type",
-			"While creating the data source or resource, an unexpected empty provider instance was received. This is always a bug in the provider code and should be reported to the provider developers.",
+			"While creating the data source or resource, an unexpected empty OpenhabProvider instance was received. This is always a bug in the OpenhabProvider code and should be reported to the OpenhabProvider developers.",
 		)
-		return provider{}, diags
+		return OpenhabProvider{}, diags
 	}
 
 	return *p, diags

@@ -8,8 +8,8 @@ import (
 
 func TestAccExampleDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck:                 func() { AccPreCheck(t) },
+		ProtoV6ProviderFactories: AccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Read testing
 			{

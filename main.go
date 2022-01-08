@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/chris922/terraform-provider-openhab/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-provider-scaffolding-framework/internal/provider"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -30,10 +30,10 @@ var (
 func main() {
 	opts := tfsdk.ServeOpts{
 		// TODO: Update this string with the published name of your provider.
-		Name: "registry.terraform.io/hashicorp/scaffolding",
+		Name: "registry.terraform.io/chris922/openhab",
 	}
 
-	err := tfsdk.Serve(context.Background(), provider.New(version), opts)
+	err := tfsdk.Serve(context.Background(), provider.NewOpenhabProvider(version), opts)
 
 	if err != nil {
 		log.Fatal(err.Error())

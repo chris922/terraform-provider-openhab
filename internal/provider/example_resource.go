@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type exampleResourceType struct{}
+type ExampleResourceType struct{}
 
-func (t exampleResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (t ExampleResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Example resource",
@@ -35,8 +35,8 @@ func (t exampleResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 	}, nil
 }
 
-func (t exampleResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
+func (t ExampleResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+	provider, diags := ConvertProviderType(in)
 
 	return exampleResource{
 		provider: provider,
@@ -49,7 +49,7 @@ type exampleResourceData struct {
 }
 
 type exampleResource struct {
-	provider provider
+	provider OpenhabProvider
 }
 
 func (r exampleResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
