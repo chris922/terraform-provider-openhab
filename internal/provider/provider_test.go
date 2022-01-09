@@ -13,7 +13,7 @@ import (
 // reattach.
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
 	"scaffolding": func() (tfprotov6.ProviderServer, error) {
-		return tfsdk.NewProtocol6Server(New("test")()), nil
+		return tfsdk.NewProtocol6Server(NewOpenhabProvider("test")()), nil
 	},
 }
 
