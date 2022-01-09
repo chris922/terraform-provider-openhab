@@ -87,7 +87,7 @@ func (p *OpenhabProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"endpoint": {
-				MarkdownDescription: "API endpoint of the target openHAB server, usually the URL with `/rest` suffix, e.g. `https://openhab:8080/rest`",
+				MarkdownDescription: "API endpoint of the target openHAB server, usually the URL with `/rest` suffix, e.g. `http://openhab:8080/rest`",
 				Required:            true,
 				Type:                types.StringType,
 				// TODO: validator
