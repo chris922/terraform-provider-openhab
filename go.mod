@@ -3,7 +3,7 @@ module github.com/chris922/terraform-provider-openhab
 go 1.17
 
 require (
-	github.com/deepmap/oapi-codegen v1.9.0
+	github.com/deepmap/oapi-codegen v1.9.1
 	github.com/getkin/kin-openapi v0.88.0
 	github.com/hashicorp/terraform-plugin-docs v0.5.1
 	github.com/hashicorp/terraform-plugin-framework v0.5.0
